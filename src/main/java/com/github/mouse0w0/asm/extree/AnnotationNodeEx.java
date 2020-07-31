@@ -32,6 +32,11 @@ public class AnnotationNodeEx extends AnnotationVisitor {
         this.array = array;
     }
 
+    @SuppressWarnings("unchecked")
+    public <T> T getValue(String key) {
+        return values == null ? null : (T) values.get(key);
+    }
+
     private void put(String name, Object value) {
         if (desc != null) {
             if (values == null) {

@@ -159,6 +159,18 @@ public class ClassNodeEx extends ClassVisitor {
         this.methods = new LinkedHashMap<>();
     }
 
+    public AnnotationNodeEx getAnnotation(String descriptor) {
+        return annotations == null ? null : annotations.get(descriptor);
+    }
+
+    public FieldNodeEx getField(String name) {
+        return fields.get(name);
+    }
+
+    public MethodNodeEx getMethod(Method method) {
+        return methods.get(method);
+    }
+
     // -----------------------------------------------------------------------------------------------
     // Implementation of the ClassVisitor abstract class
     // -----------------------------------------------------------------------------------------------

@@ -109,6 +109,10 @@ public class FieldNodeEx extends FieldVisitor {
         this.value = value;
     }
 
+    public AnnotationNodeEx getAnnotation(String descriptor) {
+        return annotations == null ? null : annotations.get(descriptor);
+    }
+
     // -----------------------------------------------------------------------------------------------
     // Implementation of the FieldVisitor abstract class
     // -----------------------------------------------------------------------------------------------

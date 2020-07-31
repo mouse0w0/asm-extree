@@ -177,6 +177,10 @@ public class MethodNodeEx extends MethodVisitor {
         this.instructions = new InsnList();
     }
 
+    public AnnotationNodeEx getAnnotation(String descriptor) {
+        return annotations == null ? null : annotations.get(descriptor);
+    }
+
     // -----------------------------------------------------------------------------------------------
     // Implementation of the MethodVisitor abstract class
     // -----------------------------------------------------------------------------------------------

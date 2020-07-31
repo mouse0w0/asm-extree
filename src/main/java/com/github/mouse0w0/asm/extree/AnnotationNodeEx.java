@@ -33,11 +33,11 @@ public class AnnotationNodeEx extends AnnotationVisitor {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T getValue(String key) {
-        return values == null ? null : (T) values.get(key);
+    public <T> T getValue(String name) {
+        return values == null ? null : (T) values.get(name);
     }
 
-    private void put(String name, Object value) {
+    public void putValue(String name, Object value) {
         if (desc != null) {
             if (values == null) {
                 values = new LinkedHashMap<>(2);
@@ -90,25 +90,25 @@ public class AnnotationNodeEx extends AnnotationVisitor {
 
     @Override
     public void visit(final String name, final Object value) {
-        put(name, value);
+        putValue(name, value);
     }
 
     @Override
     public void visitEnum(final String name, final String descriptor, final String value) {
-        put(name, new Enum(descriptor, value));
+        putValue(name, new Enum(descriptor, value));
     }
 
     @Override
     public AnnotationVisitor visitAnnotation(final String name, final String descriptor) {
         AnnotationNodeEx annotation = new AnnotationNodeEx(descriptor, false);
-        put(name, annotation);
+        putValue(name, annotation);
         return annotation;
     }
 
     @Override
     public AnnotationVisitor visitArray(final String name) {
         List<Object> array = new ArrayList<>();
-        put(name, array);
+        putValue(name, array);
         return new AnnotationNodeEx(array);
     }
 

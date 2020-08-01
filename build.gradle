@@ -32,6 +32,6 @@ publish {
     groupId = project.group
     artifactId = 'asm-extree'
     publishVersion = project.version
-    desc = ''
+    desc = 'A new tree implementation for asm (A Java bytecode manipulation and analysis framework).'
     website = 'https://github.com/Mouse0w0/asm-extree'
 }

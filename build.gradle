@@ -29,7 +29,7 @@ dependencies {
 
 publish {
     userOrg = 'mouse0w0'
-    groupId = 'com.github.mouse0w0'
+    groupId = project.group
     artifactId = 'asm-extree'
     publishVersion = project.version
     desc = ''

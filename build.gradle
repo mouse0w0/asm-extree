@@ -1,9 +1,17 @@
-plugins {
-    id 'java'
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.novoda:bintray-release:0.9.2'
+    }
 }
 
+apply plugin: 'java'
+apply plugin: 'com.novoda.bintray-release'
+
 group 'com.github.mouse0w0'
-version '8.0.2'
+version '8.0.3'
 
 sourceCompatibility = targetCompatibility = 1.8
 
@@ -17,4 +25,13 @@ dependencies {
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.4.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.4.1'
+}
+
+publish {
+    userOrg = 'mouse0w0'
+    groupId = 'com.github.mouse0w0'
+    artifactId = 'asm-extree'
+    publishVersion = project.version
+    desc = ''
+    website = 'https://github.com/Mouse0w0/asm-extree'
 }

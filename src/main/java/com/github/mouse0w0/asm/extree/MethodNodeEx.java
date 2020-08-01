@@ -181,6 +181,13 @@ public class MethodNodeEx extends MethodVisitor {
         return annotations == null ? null : annotations.get(descriptor);
     }
 
+    public void addAnnotation(AnnotationNodeEx annotationNode) {
+        if (annotations == null) {
+            annotations = new LinkedHashMap<>(2);
+        }
+        annotations.put(annotationNode.desc, annotationNode);
+    }
+
     // -----------------------------------------------------------------------------------------------
     // Implementation of the MethodVisitor abstract class
     // -----------------------------------------------------------------------------------------------

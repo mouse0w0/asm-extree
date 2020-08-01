@@ -163,12 +163,27 @@ public class ClassNodeEx extends ClassVisitor {
         return annotations == null ? null : annotations.get(descriptor);
     }
 
+    public void addAnnotation(AnnotationNodeEx annotationNode) {
+        if (annotations == null) {
+            annotations = new LinkedHashMap<>(2);
+        }
+        annotations.put(annotationNode.desc, annotationNode);
+    }
+
     public FieldNodeEx getField(String name) {
         return fields.get(name);
     }
 
+    public void addField(FieldNodeEx fieldNode) {
+        fields.put(fieldNode.name, fieldNode);
+    }
+
     public MethodNodeEx getMethod(Method method) {
         return methods.get(method);
+    }
+
+    public void addMethod(MethodNodeEx methodNode) {
+        methods.put(new Method(methodNode.name, methodNode.desc), methodNode);
     }
 
     // -----------------------------------------------------------------------------------------------

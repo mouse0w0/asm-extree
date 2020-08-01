@@ -113,6 +113,13 @@ public class FieldNodeEx extends FieldVisitor {
         return annotations == null ? null : annotations.get(descriptor);
     }
 
+    public void addAnnotation(AnnotationNodeEx annotationNode) {
+        if (annotations == null) {
+            annotations = new LinkedHashMap<>(2);
+        }
+        annotations.put(annotationNode.desc, annotationNode);
+    }
+
     // -----------------------------------------------------------------------------------------------
     // Implementation of the FieldVisitor abstract class
     // -----------------------------------------------------------------------------------------------

@@ -2,7 +2,10 @@ package com.github.mouse0w0.asm.extree;
 
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.Method;
-import org.objectweb.asm.tree.*;
+import org.objectweb.asm.tree.InnerClassNode;
+import org.objectweb.asm.tree.ModuleNode;
+import org.objectweb.asm.tree.RecordComponentNode;
+import org.objectweb.asm.tree.UnsupportedClassVersionException;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -79,15 +82,7 @@ public class ClassNodeEx extends ClassVisitor {
 
     public Map<String, AnnotationNodeEx> annotations;
 
-    /**
-     * The runtime visible type annotations of this class. May be {@literal null}.
-     */
-    public List<TypeAnnotationNode> visibleTypeAnnotations;
-
-    /**
-     * The runtime invisible type annotations of this class. May be {@literal null}.
-     */
-    public List<TypeAnnotationNode> invisibleTypeAnnotations;
+    public Map<String, TypeAnnotationNodeEx> typeAnnotations;
 
     /**
      * The non standard attributes of this class. May be {@literal null}.
@@ -163,27 +158,38 @@ public class ClassNodeEx extends ClassVisitor {
         return annotations == null ? null : annotations.get(descriptor);
     }
 
-    public void addAnnotation(AnnotationNodeEx annotationNode) {
+    public void addAnnotation(AnnotationNodeEx annotation) {
         if (annotations == null) {
             annotations = new LinkedHashMap<>(2);
         }
-        annotations.put(annotationNode.desc, annotationNode);
+        annotations.put(annotation.desc, annotation);
+    }
+
+    public TypeAnnotationNodeEx getTypeAnnotation(String descriptor) {
+        return typeAnnotations == null ? null : typeAnnotations.get(descriptor);
+    }
+
+    public void addTypeAnnotation(TypeAnnotationNodeEx typeAnnotation) {
+        if (typeAnnotations == null) {
+            typeAnnotations = new LinkedHashMap<>(2);
+        }
+        typeAnnotations.put(typeAnnotation.desc, typeAnnotation);
     }
 
     public FieldNodeEx getField(String name) {
         return fields.get(name);
     }
 
-    public void addField(FieldNodeEx fieldNode) {
-        fields.put(fieldNode.name, fieldNode);
+    public void addField(FieldNodeEx field) {
+        fields.put(field.name, field);
     }
 
     public MethodNodeEx getMethod(Method method) {
         return methods.get(method);
     }
 
-    public void addMethod(MethodNodeEx methodNode) {
-        methods.put(new Method(methodNode.name, methodNode.desc), methodNode);
+    public void addMethod(MethodNodeEx method) {
+        methods.put(new Method(method.name, method.desc), method);
     }
 
     // -----------------------------------------------------------------------------------------------
@@ -233,22 +239,15 @@ public class ClassNodeEx extends ClassVisitor {
     @Override
     public AnnotationVisitor visitAnnotation(final String descriptor, final boolean visible) {
         AnnotationNodeEx annotation = new AnnotationNodeEx(descriptor, visible);
-        if (annotations == null) {
-            annotations = new LinkedHashMap<>(2);
-        }
-        annotations.put(descriptor, annotation);
+        addAnnotation(annotation);
         return annotation;
     }
 
     @Override
     public AnnotationVisitor visitTypeAnnotation(
             final int typeRef, final TypePath typePath, final String descriptor, final boolean visible) {
-        TypeAnnotationNode typeAnnotation = new TypeAnnotationNode(typeRef, typePath, descriptor);
-        if (visible) {
-            visibleTypeAnnotations = Util.add(visibleTypeAnnotations, typeAnnotation);
-        } else {
-            invisibleTypeAnnotations = Util.add(invisibleTypeAnnotations, typeAnnotation);
-        }
+        TypeAnnotationNodeEx typeAnnotation = new TypeAnnotationNodeEx(typeRef, typePath, descriptor, visible);
+        addTypeAnnotation(typeAnnotation);
         return typeAnnotation;
     }
 
@@ -344,10 +343,7 @@ public class ClassNodeEx extends ClassVisitor {
             throw new UnsupportedClassVersionException();
         }
         if (api < Opcodes.ASM5) {
-            if (visibleTypeAnnotations != null && !visibleTypeAnnotations.isEmpty()) {
-                throw new UnsupportedClassVersionException();
-            }
-            if (invisibleTypeAnnotations != null && !invisibleTypeAnnotations.isEmpty()) {
+            if (typeAnnotations != null && !typeAnnotations.isEmpty()) {
                 throw new UnsupportedClassVersionException();
             }
         }
@@ -357,14 +353,9 @@ public class ClassNodeEx extends ClassVisitor {
                 annotation.check(api);
             }
         }
-        if (visibleTypeAnnotations != null) {
-            for (int i = visibleTypeAnnotations.size() - 1; i >= 0; --i) {
-                visibleTypeAnnotations.get(i).check(api);
-            }
-        }
-        if (invisibleTypeAnnotations != null) {
-            for (int i = invisibleTypeAnnotations.size() - 1; i >= 0; --i) {
-                invisibleTypeAnnotations.get(i).check(api);
+        if (typeAnnotations != null) {
+            for (TypeAnnotationNodeEx typeAnnotation : typeAnnotations.values()) {
+                typeAnnotation.check(api);
             }
         }
         if (recordComponents != null) {
@@ -412,20 +403,11 @@ public class ClassNodeEx extends ClassVisitor {
                 annotation.accept(classVisitor.visitAnnotation(annotation.desc, annotation.visible));
             }
         }
-        if (visibleTypeAnnotations != null) {
-            for (int i = 0, n = visibleTypeAnnotations.size(); i < n; ++i) {
-                TypeAnnotationNode typeAnnotation = visibleTypeAnnotations.get(i);
+        if (typeAnnotations != null) {
+            for (TypeAnnotationNodeEx typeAnnotation : typeAnnotations.values()) {
                 typeAnnotation.accept(
                         classVisitor.visitTypeAnnotation(
-                                typeAnnotation.typeRef, typeAnnotation.typePath, typeAnnotation.desc, true));
-            }
-        }
-        if (invisibleTypeAnnotations != null) {
-            for (int i = 0, n = invisibleTypeAnnotations.size(); i < n; ++i) {
-                TypeAnnotationNode typeAnnotation = invisibleTypeAnnotations.get(i);
-                typeAnnotation.accept(
-                        classVisitor.visitTypeAnnotation(
-                                typeAnnotation.typeRef, typeAnnotation.typePath, typeAnnotation.desc, false));
+                                typeAnnotation.typeRef, typeAnnotation.typePath, typeAnnotation.desc, typeAnnotation.visible));
             }
         }
         // Visit the non standard attributes.

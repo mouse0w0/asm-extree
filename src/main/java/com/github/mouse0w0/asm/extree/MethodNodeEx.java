@@ -43,15 +43,7 @@ public class MethodNodeEx extends MethodVisitor {
 
     public Map<String, AnnotationNodeEx> annotations;
 
-    /**
-     * The runtime visible type annotations of this method. May be {@literal null}.
-     */
-    public List<TypeAnnotationNode> visibleTypeAnnotations;
-
-    /**
-     * The runtime invisible type annotations of this method. May be {@literal null}.
-     */
-    public List<TypeAnnotationNode> invisibleTypeAnnotations;
+    public Map<String, TypeAnnotationNodeEx> typeAnnotations;
 
     /**
      * The non standard attributes of this method. May be {@literal null}.
@@ -188,6 +180,17 @@ public class MethodNodeEx extends MethodVisitor {
         annotations.put(annotationNode.desc, annotationNode);
     }
 
+    public TypeAnnotationNodeEx getTypeAnnotation(String descriptor) {
+        return typeAnnotations == null ? null : typeAnnotations.get(descriptor);
+    }
+
+    public void addTypeAnnotation(TypeAnnotationNodeEx typeAnnotation) {
+        if (typeAnnotations == null) {
+            typeAnnotations = new LinkedHashMap<>(2);
+        }
+        typeAnnotations.put(typeAnnotation.desc, typeAnnotation);
+    }
+
     // -----------------------------------------------------------------------------------------------
     // Implementation of the MethodVisitor abstract class
     // -----------------------------------------------------------------------------------------------
@@ -216,22 +219,15 @@ public class MethodNodeEx extends MethodVisitor {
     @Override
     public AnnotationVisitor visitAnnotation(final String descriptor, final boolean visible) {
         AnnotationNodeEx annotation = new AnnotationNodeEx(descriptor, visible);
-        if (annotations == null) {
-            annotations = new LinkedHashMap<>(2);
-        }
-        annotations.put(descriptor, annotation);
+        addAnnotation(annotation);
         return annotation;
     }
 
     @Override
     public AnnotationVisitor visitTypeAnnotation(
             final int typeRef, final TypePath typePath, final String descriptor, final boolean visible) {
-        TypeAnnotationNode typeAnnotation = new TypeAnnotationNode(typeRef, typePath, descriptor);
-        if (visible) {
-            visibleTypeAnnotations = Util.add(visibleTypeAnnotations, typeAnnotation);
-        } else {
-            invisibleTypeAnnotations = Util.add(invisibleTypeAnnotations, typeAnnotation);
-        }
+        TypeAnnotationNodeEx typeAnnotation = new TypeAnnotationNodeEx(typeRef, typePath, descriptor, visible);
+        addTypeAnnotation(typeAnnotation);
         return typeAnnotation;
     }
 
@@ -530,10 +526,7 @@ public class MethodNodeEx extends MethodVisitor {
             if (parameters != null && !parameters.isEmpty()) {
                 throw new UnsupportedClassVersionException();
             }
-            if (visibleTypeAnnotations != null && !visibleTypeAnnotations.isEmpty()) {
-                throw new UnsupportedClassVersionException();
-            }
-            if (invisibleTypeAnnotations != null && !invisibleTypeAnnotations.isEmpty()) {
+            if (typeAnnotations != null && !typeAnnotations.isEmpty()) {
                 throw new UnsupportedClassVersionException();
             }
             if (tryCatchBlocks != null) {
@@ -630,20 +623,11 @@ public class MethodNodeEx extends MethodVisitor {
                 annotation.accept(methodVisitor.visitAnnotation(annotation.desc, annotation.visible));
             }
         }
-        if (visibleTypeAnnotations != null) {
-            for (int i = 0, n = visibleTypeAnnotations.size(); i < n; ++i) {
-                TypeAnnotationNode typeAnnotation = visibleTypeAnnotations.get(i);
+        if (typeAnnotations != null) {
+            for (TypeAnnotationNodeEx typeAnnotation : typeAnnotations.values()) {
                 typeAnnotation.accept(
                         methodVisitor.visitTypeAnnotation(
-                                typeAnnotation.typeRef, typeAnnotation.typePath, typeAnnotation.desc, true));
-            }
-        }
-        if (invisibleTypeAnnotations != null) {
-            for (int i = 0, n = invisibleTypeAnnotations.size(); i < n; ++i) {
-                TypeAnnotationNode typeAnnotation = invisibleTypeAnnotations.get(i);
-                typeAnnotation.accept(
-                        methodVisitor.visitTypeAnnotation(
-                                typeAnnotation.typeRef, typeAnnotation.typePath, typeAnnotation.desc, false));
+                                typeAnnotation.typeRef, typeAnnotation.typePath, typeAnnotation.desc, typeAnnotation.visible));
             }
         }
         if (visibleAnnotableParameterCount > 0) {

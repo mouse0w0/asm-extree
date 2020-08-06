@@ -9,17 +9,17 @@ Step 1. Add the JitPack repository to your build file
 ```xml
 	<repositories>
 		<repository>
-		    <id>jitpack.io</id>
-		    <url>https://jitpack.io</url>
+		    <id>jcenter</id>
+		    <url>https://jcenter.bintray.com</url>
 		</repository>
 	</repositories>
 ```
 Step 2. Add the dependency
 ```xml
 	<dependency>
-	    <groupId>com.github.Mouse0w0</groupId>
+	    <groupId>com.github.mouse0w0</groupId>
 	    <artifactId>asm-extree</artifactId>
-	    <version>8.0.0</version>
+	    <version>8.0.4</version>
 	</dependency>
 ```
 ### Gradle
@@ -29,14 +29,13 @@ Add it in your root build.gradle at the end of repositories:
 ```xml
 	allprojects {
 		repositories {
-			...
-			maven { url 'https://jitpack.io' }
+			jcenter()
 		}
 	}
 ```
 Step 2. Add the dependency
 ```xml
 	dependencies {
-	        implementation 'com.github.Mouse0w0:asm-extree:8.0.0'
+	        implementation 'com.github.mouse0w0:asm-extree:8.0.4'
 	}
 ```

@@ -1,5 +1,5 @@
 # asm-extree
-[![](https://jitpack.io/v/Mouse0w0/asm-extree.svg)](https://jitpack.io/#Mouse0w0/asm-extree)
+[![Download](https://api.bintray.com/packages/mouse0w0/maven/asm-extree/images/download.svg)](https://bintray.com/mouse0w0/maven/asm-extree/_latestVersion)[![](https://jitpack.io/v/Mouse0w0/asm-extree.svg)](https://jitpack.io/#Mouse0w0/asm-extree)
 
 A new tree implementation for asm (A Java bytecode manipulation and analysis framework).
 

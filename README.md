@@ -1,5 +1,5 @@
 # asm-extree
-[![Download](https://api.bintray.com/packages/mouse0w0/maven/asm-extree/images/download.svg)](https://bintray.com/mouse0w0/maven/asm-extree/_latestVersion)[![](https://jitpack.io/v/Mouse0w0/asm-extree.svg)](https://jitpack.io/#Mouse0w0/asm-extree)
+[![Download](https://api.bintray.com/packages/mouse0w0/maven/asm-extree/images/download.svg)](https://bintray.com/mouse0w0/maven/asm-extree/_latestVersion) [![](https://jitpack.io/v/Mouse0w0/asm-extree.svg)](https://jitpack.io/#Mouse0w0/asm-extree)
 
 A new tree implementation for asm (A Java bytecode manipulation and analysis framework).
 
@@ -26,7 +26,7 @@ Step 2. Add the dependency
 Step 1. Add the JitPack repository to your build file
 
 Add it in your root build.gradle at the end of repositories:
-```xml
+```gradle
 	allprojects {
 		repositories {
 			jcenter()
@@ -34,7 +34,7 @@ Add it in your root build.gradle at the end of repositories:
 	}
 ```
 Step 2. Add the dependency
-```xml
+```gradle
 	dependencies {
 	        implementation 'com.github.mouse0w0:asm-extree:8.0.4'
 	}

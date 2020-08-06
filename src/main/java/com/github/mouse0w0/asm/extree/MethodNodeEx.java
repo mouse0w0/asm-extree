@@ -36,10 +36,7 @@ public class MethodNodeEx extends MethodVisitor {
      */
     public List<String> exceptions;
 
-    /**
-     * The method parameter info (access flags and name).
-     */
-    public List<ParameterNode> parameters;
+    public List<ParameterNodeEx> parameters;
 
     public Map<String, AnnotationNodeEx> annotations;
 
@@ -58,38 +55,6 @@ public class MethodNodeEx extends MethodVisitor {
      * preceding types. May be {@literal null}.
      */
     public Object annotationDefault;
-
-    /**
-     * The number of method parameters than can have runtime visible annotations. This number must be
-     * less or equal than the number of parameter types in the method descriptor (the default value 0
-     * indicates that all the parameters described in the method descriptor can have annotations). It
-     * can be strictly less when a method has synthetic parameters and when these parameters are
-     * ignored when computing parameter indices for the purpose of parameter annotations (see
-     * https://docs.oracle.com/javase/specs/jvms/se9/html/jvms-4.html#jvms-4.7.18).
-     */
-    public int visibleAnnotableParameterCount;
-
-    /**
-     * The runtime visible parameter annotations of this method. These lists are lists of {@link
-     * AnnotationNode} objects. May be {@literal null}.
-     */
-    public List<AnnotationNode>[] visibleParameterAnnotations;
-
-    /**
-     * The number of method parameters than can have runtime invisible annotations. This number must
-     * be less or equal than the number of parameter types in the method descriptor (the default value
-     * 0 indicates that all the parameters described in the method descriptor can have annotations).
-     * It can be strictly less when a method has synthetic parameters and when these parameters are
-     * ignored when computing parameter indices for the purpose of parameter annotations (see
-     * https://docs.oracle.com/javase/specs/jvms/se9/html/jvms-4.html#jvms-4.7.18).
-     */
-    public int invisibleAnnotableParameterCount;
-
-    /**
-     * The runtime invisible parameter annotations of this method. These lists are lists of {@link
-     * AnnotationNode} objects. May be {@literal null}.
-     */
-    public List<AnnotationNode>[] invisibleParameterAnnotations;
 
     /**
      * The instructions of this method.
@@ -191,16 +156,34 @@ public class MethodNodeEx extends MethodVisitor {
         typeAnnotations.put(typeAnnotation.desc, typeAnnotation);
     }
 
+    public ParameterNodeEx getParameter(int index) {
+        return parameters.get(index);
+    }
+
+    public ParameterNodeEx getParameter(String name) {
+        if (parameters == null) return null;
+        for (ParameterNodeEx parameter : parameters) {
+            if (parameter.name.equals(name)) {
+                return parameter;
+            }
+        }
+        return null;
+    }
+
+    public void addParameter(ParameterNodeEx parameter) {
+        if (parameters == null) {
+            parameters = new ArrayList<>(5);
+        }
+        parameters.add(parameter);
+    }
+
     // -----------------------------------------------------------------------------------------------
     // Implementation of the MethodVisitor abstract class
     // -----------------------------------------------------------------------------------------------
 
     @Override
     public void visitParameter(final String name, final int access) {
-        if (parameters == null) {
-            parameters = new ArrayList<>(5);
-        }
-        parameters.add(new ParameterNode(name, access));
+        addParameter(new ParameterNodeEx(name, access));
     }
 
     @Override
@@ -233,33 +216,15 @@ public class MethodNodeEx extends MethodVisitor {
 
     @Override
     public void visitAnnotableParameterCount(final int parameterCount, final boolean visible) {
-        if (visible) {
-            visibleAnnotableParameterCount = parameterCount;
-        } else {
-            invisibleAnnotableParameterCount = parameterCount;
-        }
+        // Nothing to do.
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public AnnotationVisitor visitParameterAnnotation(
             final int parameter, final String descriptor, final boolean visible) {
-        AnnotationNode annotation = new AnnotationNode(descriptor);
-        if (visible) {
-            if (visibleParameterAnnotations == null) {
-                int params = Type.getArgumentTypes(desc).length;
-                visibleParameterAnnotations = (List<AnnotationNode>[]) new List<?>[params];
-            }
-            visibleParameterAnnotations[parameter] =
-                    Util.add(visibleParameterAnnotations[parameter], annotation);
-        } else {
-            if (invisibleParameterAnnotations == null) {
-                int params = Type.getArgumentTypes(desc).length;
-                invisibleParameterAnnotations = (List<AnnotationNode>[]) new List<?>[params];
-            }
-            invisibleParameterAnnotations[parameter] =
-                    Util.add(invisibleParameterAnnotations[parameter], annotation);
-        }
+        AnnotationNodeEx annotation = new AnnotationNodeEx(descriptor, visible);
+        getParameter(parameter).addAnnotation(annotation);
         return annotation;
     }
 
@@ -630,34 +595,34 @@ public class MethodNodeEx extends MethodVisitor {
                                 typeAnnotation.typeRef, typeAnnotation.typePath, typeAnnotation.desc, typeAnnotation.visible));
             }
         }
+
+        int visibleAnnotableParameterCount = 0;
+        int invisibleAnnotableParameterCount = 0;
+        if (parameters != null) {
+            for (int i = 0; i < parameters.size(); i++) {
+                ParameterNodeEx parameter = parameters.get(i);
+                if (parameter.annotations == null) continue;
+
+                for (AnnotationNodeEx annotation : parameter.annotations.values()) {
+                    if (annotation.visible) {
+                        visibleAnnotableParameterCount = i + 1;
+                    } else {
+                        invisibleAnnotableParameterCount = i + 1;
+                    }
+                }
+            }
+        }
+
         if (visibleAnnotableParameterCount > 0) {
             methodVisitor.visitAnnotableParameterCount(visibleAnnotableParameterCount, true);
-        }
-        if (visibleParameterAnnotations != null) {
-            for (int i = 0, n = visibleParameterAnnotations.length; i < n; ++i) {
-                List<AnnotationNode> parameterAnnotations = visibleParameterAnnotations[i];
-                if (parameterAnnotations == null) {
-                    continue;
-                }
-                for (int j = 0, m = parameterAnnotations.size(); j < m; ++j) {
-                    AnnotationNode annotation = parameterAnnotations.get(j);
-                    annotation.accept(methodVisitor.visitParameterAnnotation(i, annotation.desc, true));
-                }
+            for (int i = 0; i < visibleAnnotableParameterCount; i++) {
+                parameters.get(i).acceptParameterAnnotation(methodVisitor, i, true);
             }
         }
         if (invisibleAnnotableParameterCount > 0) {
             methodVisitor.visitAnnotableParameterCount(invisibleAnnotableParameterCount, false);
-        }
-        if (invisibleParameterAnnotations != null) {
-            for (int i = 0, n = invisibleParameterAnnotations.length; i < n; ++i) {
-                List<AnnotationNode> parameterAnnotations = invisibleParameterAnnotations[i];
-                if (parameterAnnotations == null) {
-                    continue;
-                }
-                for (int j = 0, m = parameterAnnotations.size(); j < m; ++j) {
-                    AnnotationNode annotation = parameterAnnotations.get(j);
-                    annotation.accept(methodVisitor.visitParameterAnnotation(i, annotation.desc, false));
-                }
+            for (int i = 0; i < visibleAnnotableParameterCount; i++) {
+                parameters.get(i).acceptParameterAnnotation(methodVisitor, i, false);
             }
         }
         // Visit the non standard attributes.
